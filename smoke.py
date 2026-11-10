@@ -1,0 +1,25 @@
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page(viewport={"width": 1280, "height": 800})
+    page.goto('http://127.0.0.1:5173/#14')
+    page.wait_for_load_state('networkidle')
+    assert 'Сравните пять маршрутов' in page.locator('h1').inner_text()
+    page.locator('select').first.select_option(index=1)
+    page.locator('select').nth(1).select_option(label='Неблагоприятный')
+    page.locator('input[type=number]').first.fill('0')
+    assert '0' in page.locator('.output b').first.inner_text()
+    page.get_by_role('button', name='Анимации').click()
+    page.locator('.settings select').select_option('fade')
+    page.reload()
+    page.get_by_role('button', name='Анимации').click()
+    assert page.locator('.settings select').input_value() == 'fade'
+    page.get_by_role('button', name='Анимации').click()
+    page.locator('h1').click()
+    page.keyboard.press('ArrowRight')
+    assert page.url.endswith('#15')
+    page.set_viewport_size({'width': 390, 'height': 844})
+    assert page.locator('body').evaluate('(e) => e.scrollWidth <= innerWidth')
+    print('Browser smoke checks passed')
+    browser.close()
